@@ -1,0 +1,54 @@
+package com.chan.scraper_service.entities;
+
+import com.chan.scraper_service.enums.ScrapeStatus;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "scrape_runs")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ScrapeRun {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+            private Long id;
+
+            private String sourceWebsite;        // "sportguru.ro"
+            private String scrapeUrl;            // the URL scraped
+
+            @Enumerated(EnumType.STRING)
+            private ScrapeStatus status;         // RUNNING, SUCCESS, FAILED, PARTIAL
+
+            private LocalDateTime startedAt;
+            private LocalDateTime finishedAt;
+
+            // --- STATISTICS ---
+            private Integer totalFound;          // products found on page
+            private Integer totalInserted;       // new products added
+            private Integer totalUpdated;        // existing products updated
+            private Integer totalUnchanged;      // no changes detected
+            private Integer totalFailed;         // failed to parse
+
+            // --- ERROR TRACKING ---
+            @Column(columnDefinition = "text")
+            private String errorMessage;         // if FAILED or PARTIAL
+
+            @CreationTimestamp
+            private LocalDateTime createdAt;
+
+            // --- RELATIONSHIP ---
+            @OneToMany(mappedBy = "scrapeRun",
+                    cascade = CascadeType.ALL,
+                    fetch = FetchType.LAZY)
+            private List<ProductPriceHistory> priceHistories;
+}
