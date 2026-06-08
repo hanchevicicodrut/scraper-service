@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -76,10 +77,10 @@ public class Product {
 
     // --- AUDIT ---
     @CreationTimestamp
-    private LocalDateTime firstScrapedAt;
+    private Instant firstScrapedAt;
 
     @UpdateTimestamp
-    private LocalDateTime lastScrapedAt;
+    private Instant lastScrapedAt;
 
     // --- RELATIONSHIP ---
     @OneToOne(mappedBy = "product",
@@ -95,5 +96,5 @@ public class Product {
     @Builder.Default
     private Boolean active = true;
 
-    private LocalDateTime deactivatedAt;
+    private Instant deactivatedAt;
 }

@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,6 +23,26 @@ public class ScraperOrchestrator {
     private static final String SOURCE  = "bikexpert.ro";
     private static final String SCRAPE_URL =
             "https://www.bikexpert.ro/biciclete/mountain-bike";
+
+    /**
+     * Scrapes a single product and persists it. Handy as a smoke test for the
+     * scrape → save pipeline without running a full crawl.
+     */
+    public void runSingleProductTest() {
+        ScrapeRun run = scrapeRunService.start(SOURCE, SCRAPE_URL);
+
+        try {
+            ScrapedProductDto product = scraperService.scrapeOneProductWithDetails();
+            run.setTotalFound(1);
+
+            productService.saveOrUpdate(product, run);
+
+            scrapeRunService.finish(run);
+        } catch (Exception e) {
+            scrapeRunService.fail(run, e.getMessage());
+            log.error("Single product scrape failed", e);
+        }
+    }
 
     public void runFullScrape() {
         ScrapeRun run = scrapeRunService.start(SOURCE, SCRAPE_URL);

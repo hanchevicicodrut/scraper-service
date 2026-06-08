@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -21,7 +22,7 @@ public class ScrapeRunService {
                 .sourceWebsite(sourceWebsite)
                 .scrapeUrl(scrapeUrl)
                 .status(ScrapeStatus.RUNNING)
-                .startedAt(LocalDateTime.now())
+                .startedAt(Instant.now())
                 .totalFound(0)
                 .totalInserted(0)
                 .totalUpdated(0)
@@ -36,7 +37,7 @@ public class ScrapeRunService {
 
     public void finish(ScrapeRun run) {
         run.setStatus(ScrapeStatus.SUCCESS);
-        run.setFinishedAt(LocalDateTime.now());
+        run.setFinishedAt(Instant.now());
         scrapeRunRepository.save(run);
         log.info("✅ Scrape run finished: id={} inserted={} updated={} unchanged={} failed={}",
                 run.getId(),
@@ -48,7 +49,7 @@ public class ScrapeRunService {
 
     public void fail(ScrapeRun run, String errorMessage) {
         run.setStatus(ScrapeStatus.FAILED);
-        run.setFinishedAt(LocalDateTime.now());
+        run.setFinishedAt(Instant.now());
         run.setErrorMessage(errorMessage);
         scrapeRunRepository.save(run);
         log.error("❌ Scrape run failed: id={} error={}", run.getId(), errorMessage);
@@ -56,7 +57,7 @@ public class ScrapeRunService {
 
     public void partial(ScrapeRun run) {
         run.setStatus(ScrapeStatus.PARTIAL);
-        run.setFinishedAt(LocalDateTime.now());
+        run.setFinishedAt(Instant.now());
         scrapeRunRepository.save(run);
         log.warn("⚠️ Scrape run partial: id={} failed={}", run.getId(), run.getTotalFailed());
     }

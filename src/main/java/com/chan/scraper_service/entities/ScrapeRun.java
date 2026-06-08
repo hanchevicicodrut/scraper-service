@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,8 +30,8 @@ public class ScrapeRun {
             @Enumerated(EnumType.STRING)
             private ScrapeStatus status;         // RUNNING, SUCCESS, FAILED, PARTIAL
 
-            private LocalDateTime startedAt;
-            private LocalDateTime finishedAt;
+            private Instant startedAt;
+            private Instant finishedAt;
 
             // --- STATISTICS ---
             private Integer totalFound;          // products found on page
@@ -44,7 +45,7 @@ public class ScrapeRun {
             private String errorMessage;         // if FAILED or PARTIAL
 
             @CreationTimestamp
-            private LocalDateTime createdAt;
+            private Instant createdAt;
 
             // --- RELATIONSHIP ---
             @OneToMany(mappedBy = "scrapeRun",

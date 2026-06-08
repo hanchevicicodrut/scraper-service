@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +104,7 @@ public class ProductService {
 
         if (changeType == PriceChangeType.NO_CHANGE) {
             // Just update lastScrapedAt — no history record needed
-            existing.setLastScrapedAt(LocalDateTime.now());
+            existing.setLastScrapedAt(Instant.now());
             productRepository.save(existing);
             scrapeRun.setTotalUnchanged(scrapeRun.getTotalUnchanged() + 1);
             log.info("  ↔️  No change: [{}] {}", existing.getSku(), existing.getName());
@@ -196,7 +197,7 @@ public class ProductService {
 
         toDeactivate.forEach(p -> {
             p.setActive(false);
-            p.setDeactivatedAt(LocalDateTime.now());
+            p.setDeactivatedAt(Instant.now());
             log.info("  🔴 Deactivated: [{}] {}", p.getSku(), p.getName());
         });
 

@@ -1,13 +1,18 @@
 package com.chan.scraper_service;
 
 import com.chan.scraper_service.dtos.ScrapedProductDto;
+import com.chan.scraper_service.entities.Product;
+import com.chan.scraper_service.repositories.ProductRepository;
 import com.chan.scraper_service.services.BikeXpertScraperService;
+import com.chan.scraper_service.services.ScraperOrchestrator;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.internal.constraintvalidators.bv.AssertFalseValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,6 +22,12 @@ public class BikeXpertScraperServiceTest {
 
     @Autowired
     private BikeXpertScraperService bikeXpertScraperService;
+
+    @Autowired
+    private ScraperOrchestrator scraperOrchestrator;
+
+    @Autowired
+    private ProductRepository productRepository;
 
 //    @Test
 //    @DisplayName("should return 200")
@@ -73,5 +84,23 @@ public class BikeXpertScraperServiceTest {
         assertNotNull(product.getAttributes());
         assertFalse(product.getAttributes().isEmpty(),
                 "Should have at least one attribute");
+    }
+
+    @Test
+    @DisplayName("should scrape and persist a single product")
+    void shouldScrapeAndSaveOneProduct() {
+
+        ScrapedProductDto scraped = bikeXpertScraperService.scrapeOneProductWithDetails();
+        assertNotNull(scraped, "Scraped product should not be null");
+        assertNotNull(scraped.getSku(), "Scraped product should have a SKU");
+
+        scraperOrchestrator.runSingleProductTest();
+
+        Optional<Product> saved = productRepository.findBySku(scraped.getSku());
+        assertTrue(saved.isPresent(), "Product should have been persisted to the database");
+
+        log.info("Persisted product: [{}] {} — {} {}",
+                saved.get().getSku(), saved.get().getName(),
+                saved.get().getCurrentPrice(), saved.get().getCurrency());
     }
 }
