@@ -30,4 +30,10 @@ public interface ProductMapper {
     @Mapping(target = "priceHistory",   ignore = true)
     @Mapping(source = "price",          target = "currentPrice")
     void updateEntity(ScrapedProductDto dto, @MappingTarget Product product);
+
+    // ── Product → ScrapedProductDto ───────────────────────────────
+    @Mapping(source = "currentPrice", target = "price")
+    @Mapping(target = "productId",    ignore = true)
+    @Mapping(target = "discount",     ignore = true)
+    ScrapedProductDto toDto(Product product);
 }

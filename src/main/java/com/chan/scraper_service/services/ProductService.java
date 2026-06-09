@@ -225,4 +225,8 @@ public class ProductService {
         productRepository.saveAll(toReactivate);
         return toReactivate.size();
     }
+
+    public List<ScrapedProductDto> getAllProducts(){
+        return productRepository.findAll().stream().map(productMapper::toDto).collect(Collectors.toList());
+    }
 }

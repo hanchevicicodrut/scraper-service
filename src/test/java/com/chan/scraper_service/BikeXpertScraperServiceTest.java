@@ -6,13 +6,14 @@ import com.chan.scraper_service.repositories.ProductRepository;
 import com.chan.scraper_service.services.BikeXpertScraperService;
 import com.chan.scraper_service.services.ScraperOrchestrator;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.internal.constraintvalidators.bv.AssertFalseValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Instant;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -89,7 +90,8 @@ public class BikeXpertScraperServiceTest {
     @Test
     @DisplayName("should scrape and persist a single product")
     void shouldScrapeAndSaveOneProduct() {
-
+        System.out.println("JVM Timezone: " + TimeZone.getDefault().getID());
+        System.out.println("Current Instant: " + Instant.now());
         ScrapedProductDto scraped = bikeXpertScraperService.scrapeOneProductWithDetails();
         assertNotNull(scraped, "Scraped product should not be null");
         assertNotNull(scraped.getSku(), "Scraped product should have a SKU");

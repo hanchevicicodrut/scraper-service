@@ -6,10 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -18,6 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class ScrapeRun {
 
     @Id
@@ -44,7 +45,7 @@ public class ScrapeRun {
             @Column(columnDefinition = "text")
             private String errorMessage;         // if FAILED or PARTIAL
 
-            @CreationTimestamp
+            @CreatedDate
             private Instant createdAt;
 
             // --- RELATIONSHIP ---

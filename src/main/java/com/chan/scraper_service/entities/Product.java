@@ -5,16 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "products")
@@ -22,6 +22,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Product {
 
     @Id
@@ -75,11 +76,10 @@ public class Product {
     // shoes:  {"material":"leather", "waterproof":"true"}
     // helmet: {"certification":"EN1078", "visor":"true"}
 
-    // --- AUDIT ---
-    @CreationTimestamp
+    @CreatedDate
     private Instant firstScrapedAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private Instant lastScrapedAt;
 
     // --- RELATIONSHIP ---
