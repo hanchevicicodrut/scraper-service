@@ -6,5 +6,6 @@ public enum PriceChangeType {
     PRICE_DOWN,      // price decreased 🎯 most interesting for users
     BACK_IN_STOCK,   // was out of stock, now available
     OUT_OF_STOCK,    // was available, now out of stock
-    NO_CHANGE        // price same, stock same (rarely stored)
+    SIZES_CHANGED,   // available sizes changed
+    NO_CHANGE        // price same, stock same, sizes same (rarely stored)
 }

@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -99,7 +100,8 @@ public class ProductService {
 
         // Detect what changed
         PriceChangeType changeType = detectChangeType(
-                oldPrice, oldStock, newPrice, newStock
+                oldPrice, oldStock, existing.getAvailableSizes(),
+                newPrice, newStock, dto.getAvailableSizes()
         );
 
         if (changeType == PriceChangeType.NO_CHANGE) {
@@ -142,10 +144,12 @@ public class ProductService {
     // DETECT CHANGE TYPE
     // ─────────────────────────────────────────────────────────────
 
-    private PriceChangeType detectChangeType(BigDecimal oldPrice,
-                                             Boolean    oldStock,
-                                             BigDecimal newPrice,
-                                             Boolean    newStock) {
+    private PriceChangeType detectChangeType(BigDecimal   oldPrice,
+                                             Boolean      oldStock,
+                                             List<String> oldSizes,
+                                             BigDecimal   newPrice,
+                                             Boolean      newStock,
+                                             List<String> newSizes) {
 
         // Stock changes take priority
         if (Boolean.FALSE.equals(oldStock) && Boolean.TRUE.equals(newStock)) {
@@ -160,6 +164,13 @@ public class ProductService {
             int comparison = oldPrice.compareTo(newPrice);
             if (comparison > 0) return PriceChangeType.PRICE_DOWN;
             if (comparison < 0) return PriceChangeType.PRICE_UP;
+        }
+
+        // Sizes changed (order-independent comparison)
+        Set<String> oldSet = oldSizes != null ? new HashSet<>(oldSizes) : new HashSet<>();
+        Set<String> newSet = newSizes != null ? new HashSet<>(newSizes) : new HashSet<>();
+        if (!oldSet.equals(newSet)) {
+            return PriceChangeType.SIZES_CHANGED;
         }
 
         return PriceChangeType.NO_CHANGE;
