@@ -23,9 +23,9 @@ public class BikeXpertScraperService {
                     "AppleWebKit/537.36 (KHTML, like Gecko) " +
                     "Chrome/137.0.0.0 Safari/537.36";
 
-    private static final String BASE_URL    = "https://www.bikexpert.ro";
+    private static final String BASE_URL = "https://www.bikexpert.ro";
     private static final String LISTING_URL = BASE_URL + "/biciclete/mountain-bike";
-    private static final String PAGE_URL    = LISTING_URL + "/pag-";
+    private static final String PAGE_URL = LISTING_URL + "/pag-";
 
     private final Random random = new Random();
 
@@ -71,9 +71,16 @@ public class BikeXpertScraperService {
             Elements products = doc.select("div.product");
             log.info("Products found on page: {}", products.size());
 
+            String[] categoryData = extractCategoryAndSubcategory(doc);
+            String category = categoryData[0];
+            String subcategory = categoryData[1];
+
             for (Element product : products) {
                 try {
-                    results.add(parseProductCard(product));
+                    var dto = parseProductCard(product);
+                    dto.setCategory(category);
+                    dto.setSubcategory(subcategory);
+                    results.add(dto);
                 } catch (Exception e) {
                     log.warn("Failed to parse product card: {}", e.getMessage());
                 }
@@ -165,6 +172,7 @@ public class BikeXpertScraperService {
                 dto.setDescription(descEl.text().trim());
             }
 
+
             // ── ATTRIBUTES FROM PARAM TABLE ───────────────────────
             Map<String, String> attributes = new LinkedHashMap<>();
             Elements rows = doc.select(".product-param-table tr");
@@ -172,7 +180,7 @@ public class BikeXpertScraperService {
             for (Element row : rows) {
                 Elements cols = row.select("td");
                 if (cols.size() >= 2) {
-                    String key   = cols.get(0).text().trim();
+                    String key = cols.get(0).text().trim();
                     String value = cols.get(1).text().trim();
 
                     if (!key.isEmpty() && !value.isEmpty()) {
@@ -180,11 +188,9 @@ public class BikeXpertScraperService {
 
                         // Map known keys to dedicated fields
                         switch (key.toLowerCase()) {
-                            case "model bicicleta" ->
-                                    dto.setSubcategory(value);
-                            case "culoare" ->
-                                    dto.setAvailableColors(
-                                            Arrays.asList(value.split("[,/]")));
+//                            case "model bicicleta" -> dto.setSubcategory(value);
+                            case "culoare" -> dto.setAvailableColors(
+                                    Arrays.asList(value.split("[,/]")));
                         }
                     }
                 }
@@ -226,12 +232,12 @@ public class BikeXpertScraperService {
     }
 
     private ScrapedProductDto parseProductCard(Element product) {
-        Element nameEl     = product.selectFirst("a[title]");
-        Element priceEl    = product.selectFirst(".price");
-        Element imgEl      = product.selectFirst("img");
+        Element nameEl = product.selectFirst("a[title]");
+        Element priceEl = product.selectFirst(".price");
+        Element imgEl = product.selectFirst("img");
         Element discountEl = product.selectFirst(".discount-product-floating");
 
-        String rawPrice   = priceEl != null ? priceEl.text() : "0";
+        String rawPrice = priceEl != null ? priceEl.text() : "0";
         String cleanPrice = rawPrice
                 .replaceAll("[^0-9.]", "")
                 .replaceAll("\\.(?=.*\\.)", "");
@@ -251,7 +257,6 @@ public class BikeXpertScraperService {
                 .price(new BigDecimal(cleanPrice.isEmpty() ? "0" : cleanPrice))
                 .currency("RON")
                 .discount(discountEl != null ? discountEl.text().trim() : null)
-                .category("Mountain Bike")
                 .sourceWebsite("bikexpert.ro")
                 .inStock(product.hasClass("stocid2"))
                 .build();
@@ -275,5 +280,28 @@ public class BikeXpertScraperService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    // ── EXTRACT CATEGORY + SUBCATEGORY ───────────────────────────
+    private String[] extractCategoryAndSubcategory(Document doc) {
+        String category = null;
+        String subcategory = null;
+
+        Elements breadcrumbs = doc.select(
+                "ol.box-breadcrumbs li.breadcrumb-item");
+
+        if (breadcrumbs.size() >= 2) {
+            category = breadcrumbs.get(1)
+                    .selectFirst("span[itemprop=name]")
+                    .text().trim();
+        }
+        if (breadcrumbs.size() >= 3) {
+            subcategory = breadcrumbs.get(2)
+                    .selectFirst("span[itemprop=name]")
+                    .text().trim();
+        }
+
+        log.info("Category: {} | Subcategory: {}", category, subcategory);
+        return new String[]{category, subcategory};
     }
 }
