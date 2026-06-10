@@ -270,7 +270,7 @@ public class BikeXpertScraperService {
                 .header("Accept-Language", "ro-RO,ro;q=0.9")
                 .header("Cache-Control", "no-cache")
                 .followRedirects(true)
-                .timeout(15_000)
+                .timeout(35_000)
                 .get();
     }
 
