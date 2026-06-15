@@ -2,10 +2,14 @@ package com.chan.scraper_service.services;
 
 import com.chan.scraper_service.dtos.ScrapedProductDto;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -32,7 +36,11 @@ public class BikeXpertScraperService {
     // ─────────────────────────────────────────────────────────────
     // PUBLIC API
     // ─────────────────────────────────────────────────────────────
-
+    @Retryable(retryFor = IOException.class,
+            noRetryFor = HttpStatusException.class,
+            backoff = @Backoff(delay = 5000,
+                    multiplier = 2.0,
+                    maxDelay = 30000))
     public List<ScrapedProductDto> scrapeAllPages() {
         List<ScrapedProductDto> allProducts = new ArrayList<>();
 
@@ -60,6 +68,13 @@ public class BikeXpertScraperService {
 
         log.info("━━━ Scrape complete. Available products: {}", allProducts.size());
         return allProducts;
+    }
+
+
+    @Recover
+    public List<ScrapedProductDto> recoverScrapeAllPages(Exception e) {
+        log.error("💀 scrapeAllPages failed after all retries: {}", e.getMessage());
+        return Collections.emptyList();
     }
 
     public List<ScrapedProductDto> scrapeListingPage(String url) {
@@ -210,9 +225,9 @@ public class BikeXpertScraperService {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// PRIVATE HELPERS
+// ─────────────────────────────────────────────────────────────
 
     private int findTotalPages() {
         try {

@@ -51,6 +51,11 @@ public class ScraperOrchestrator {
             // 1. Scrape all pages
             List<ScrapedProductDto> products =
                     scraperService.scrapeAllPages();
+
+            if (products.isEmpty()) {
+                scrapeRunService.fail(run, "No products scraped after all retries");
+                return;
+            }
             run.setTotalFound(products.size());
 
             // 2. Collect all scraped SKUs
