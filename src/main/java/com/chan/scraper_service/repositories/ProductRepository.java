@@ -1,5 +1,6 @@
 package com.chan.scraper_service.repositories;
 
+import com.chan.scraper_service.entities.Company;
 import com.chan.scraper_service.entities.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -70,4 +71,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findBySourceWebsiteAndActive(String sourceWebsite, Boolean active);
 
     List<Product> findByActive(Boolean active);
+
+    List<Product> findByCompany(Company company);
+
+    List<Product> findByCompany_Id(Long companyId);
 }

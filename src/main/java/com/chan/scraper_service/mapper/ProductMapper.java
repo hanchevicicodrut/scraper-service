@@ -20,6 +20,7 @@ public interface ProductMapper {
     @Mapping(target = "embedding",      ignore = true)
     @Mapping(target = "priceHistory",   ignore = true)
     @Mapping(source = "price",          target = "currentPrice")
+    @Mapping(target = "company", ignore = true)
     Product toEntity(ScrapedProductDto dto);
 
     // ── Update EXISTING product from new scrape ───────────────────
@@ -29,6 +30,7 @@ public interface ProductMapper {
     @Mapping(target = "embedding",      ignore = true)
     @Mapping(target = "priceHistory",   ignore = true)
     @Mapping(source = "price",          target = "currentPrice")
+    @Mapping(target = "company", ignore = true)
     void updateEntity(ScrapedProductDto dto, @MappingTarget Product product);
 
     // ── Product → ScrapedProductDto ───────────────────────────────

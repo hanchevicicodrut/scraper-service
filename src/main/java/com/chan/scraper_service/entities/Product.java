@@ -97,4 +97,8 @@ public class Product {
     private Boolean active = true;
 
     private Instant deactivatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 }

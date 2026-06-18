@@ -1,6 +1,7 @@
 package com.chan.scraper_service.services;
 
 import com.chan.scraper_service.dtos.ScrapedProductDto;
+import com.chan.scraper_service.entities.Company;
 import com.chan.scraper_service.entities.Product;
 import com.chan.scraper_service.entities.ProductPriceHistory;
 import com.chan.scraper_service.entities.ScrapeRun;
@@ -31,6 +32,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductPriceHistoryRepository priceHistoryRepository;
     private final ProductMapper productMapper;
+    private final CompanyService companyService;
 
     // ─────────────────────────────────────────────────────────────
     // MAIN METHOD — called for each scraped product
@@ -63,6 +65,8 @@ public class ProductService {
 
         // Map DTO → Entity
         Product product = productMapper.toEntity(dto);
+        Company bikeXpert = companyService.findByName("BikXpert").orElseThrow(() -> new IllegalArgumentException("Company not found: BikeXpert"));
+        product.setCompany(bikeXpert);
         Product saved = productRepository.save(product);
 
         // Record first price history

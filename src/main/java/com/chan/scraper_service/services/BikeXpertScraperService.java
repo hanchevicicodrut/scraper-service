@@ -197,6 +197,9 @@ public class BikeXpertScraperService {
                 if (cols.size() >= 2) {
                     String key = cols.get(0).text().trim();
                     String value = cols.get(1).text().trim();
+                    if ("Model".equals(key)) {
+                        key = "Gen";
+                    }
 
                     if (!key.isEmpty() && !value.isEmpty()) {
                         attributes.put(key, value);
@@ -248,15 +251,15 @@ public class BikeXpertScraperService {
 
     private ScrapedProductDto parseProductCard(Element product) {
         Element nameEl = product.selectFirst("a[title]");
-        Element priceEl = product.selectFirst(".price");
+        Element priceEl = product.selectFirst(".price.t-call-to-action-background-to-text");
+        // fallback if class combo differs
+        if (priceEl == null) {
+            priceEl = product.selectFirst(".price:not(.old)");
+        }
         Element imgEl = product.selectFirst("img");
         Element discountEl = product.selectFirst(".discount-product-floating");
 
-        String rawPrice = priceEl != null ? priceEl.text() : "0";
-        String cleanPrice = rawPrice
-                .replaceAll("[^0-9.]", "")
-                .replaceAll("\\.(?=.*\\.)", "");
-
+        BigDecimal price = extractPrice(priceEl);
         String relativeUrl = nameEl != null ? nameEl.attr("href") : "";
         String fullUrl = relativeUrl.startsWith("http")
                 ? relativeUrl
@@ -268,8 +271,8 @@ public class BikeXpertScraperService {
                         ? nameEl.attr("title").replace("\"", "").trim()
                         : null)
                 .productUrl(fullUrl)
-                .imageUrl(imgEl != null ? imgEl.attr("data-realpic") : null)
-                .price(new BigDecimal(cleanPrice.isEmpty() ? "0" : cleanPrice))
+                .imageUrl(imgEl != null ? imgEl.attr("src") : null)
+                .price(price)
                 .currency("RON")
                 .discount(discountEl != null ? discountEl.text().trim() : null)
                 .sourceWebsite("bikexpert.ro")
@@ -318,5 +321,30 @@ public class BikeXpertScraperService {
 
         log.info("Category: {} | Subcategory: {}", category, subcategory);
         return new String[]{category, subcategory};
+    }
+
+    // ── EXTRACT PRICE (handles <sup> for decimals) ───────────────
+    private BigDecimal extractPrice(Element priceEl) {
+        if (priceEl == null) return BigDecimal.ZERO;
+
+        Element supEl = priceEl.selectFirst("sup");
+
+        // Whole part = direct text nodes of priceEl (excludes <sup> content)
+        String wholePart = priceEl.textNodes().stream()
+                .map(tn -> tn.text().trim())
+                .filter(t -> !t.isEmpty())
+                .findFirst()
+                .orElse("0");
+
+        String decimalPart = supEl != null ? supEl.text().trim() : "00";
+
+        // Remove thousand-separator dots and any non-digits
+        String cleanWhole = wholePart.replaceAll("[^0-9]", "");
+        String cleanDecimal = decimalPart.replaceAll("[^0-9]", "");
+
+        if (cleanWhole.isEmpty()) return BigDecimal.ZERO;
+        if (cleanDecimal.isEmpty() || cleanDecimal.length() > 2) cleanDecimal = "00";
+
+        return new BigDecimal(cleanWhole + "." + cleanDecimal);
     }
 }
