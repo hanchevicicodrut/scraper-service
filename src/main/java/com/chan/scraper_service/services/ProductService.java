@@ -39,7 +39,7 @@ public class ProductService {
     // ─────────────────────────────────────────────────────────────
 
     @Transactional
-    public void saveOrUpdate(ScrapedProductDto dto, ScrapeRun scrapeRun) {
+    public void saveOrUpdate(ScrapedProductDto dto, ScrapeRun scrapeRun, String companyName) {
 
         if (dto.getSku() == null || dto.getSku().isBlank()) {
             log.warn("Skipping product with null SKU: {}", dto.getName());
@@ -50,7 +50,7 @@ public class ProductService {
         Optional<Product> existing = productRepository.findBySku(dto.getSku());
 
         if (existing.isEmpty()) {
-            insertNewProduct(dto, scrapeRun);
+            insertNewProduct(dto, scrapeRun, companyName);
         } else {
             updateExistingProduct(dto, existing.get(), scrapeRun);
         }
@@ -60,12 +60,12 @@ public class ProductService {
     // INSERT — new product never seen before
     // ─────────────────────────────────────────────────────────────
 
-    private void insertNewProduct(ScrapedProductDto dto, ScrapeRun scrapeRun) {
+    private void insertNewProduct(ScrapedProductDto dto, ScrapeRun scrapeRun, String companyName) {
         log.info("  ➕ Inserting new product: [{}] {}", dto.getSku(), dto.getName());
 
         // Map DTO → Entity
         Product product = productMapper.toEntity(dto);
-        Company bikeXpert = companyService.findByName("BikXpert").orElseThrow(() -> new IllegalArgumentException("Company not found: BikeXpert"));
+        Company bikeXpert = companyService.findByName(companyName).orElseThrow(() -> new IllegalArgumentException("Company not found: BikeXpert"));
         product.setCompany(bikeXpert);
         Product saved = productRepository.save(product);
 

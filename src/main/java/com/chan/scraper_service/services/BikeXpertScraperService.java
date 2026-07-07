@@ -28,8 +28,6 @@ public class BikeXpertScraperService {
                     "Chrome/137.0.0.0 Safari/537.36";
 
     private static final String BASE_URL = "https://www.bikexpert.ro";
-    private static final String LISTING_URL = BASE_URL + "/biciclete/mountain-bike";
-    private static final String PAGE_URL = LISTING_URL + "/pag-";
 
     private final Random random = new Random();
 
@@ -41,14 +39,14 @@ public class BikeXpertScraperService {
             backoff = @Backoff(delay = 5000,
                     multiplier = 2.0,
                     maxDelay = 30000))
-    public List<ScrapedProductDto> scrapeAllPages() {
+    public List<ScrapedProductDto> scrapeAllPages(String listingUrl) {
         List<ScrapedProductDto> allProducts = new ArrayList<>();
 
-        int totalPages = findTotalPages();
+        int totalPages = findTotalPages(listingUrl);
         log.info("Total pages found: {}", totalPages);
 
         for (int page = 1; page <= totalPages; page++) {
-            String url = page == 1 ? LISTING_URL : PAGE_URL + page;
+            String url = page == 1 ? listingUrl : listingUrl + "/pag-" + page;
             log.info("━━━ Scraping page {}/{}: {}", page, totalPages, url);
 
             List<ScrapedProductDto> pageProducts = scrapeListingPage(url);
@@ -72,7 +70,7 @@ public class BikeXpertScraperService {
 
 
     @Recover
-    public List<ScrapedProductDto> recoverScrapeAllPages(Exception e) {
+    public List<ScrapedProductDto> recoverScrapeAllPages(Exception e, String listingUrl) {
         log.error("💀 scrapeAllPages failed after all retries: {}", e.getMessage());
         return Collections.emptyList();
     }
@@ -106,8 +104,8 @@ public class BikeXpertScraperService {
         return results;
     }
 
-    public ScrapedProductDto scrapeOneProductWithDetails() {
-        List<ScrapedProductDto> products = scrapeListingPage(LISTING_URL);
+    public ScrapedProductDto scrapeOneProductWithDetails(String listingUrl) {
+        List<ScrapedProductDto> products = scrapeListingPage(listingUrl);
 
         for (ScrapedProductDto dto : products) {
             enrichWithDetailPage(dto);
@@ -147,7 +145,7 @@ public class BikeXpertScraperService {
             // ── SKIP RULE ─────────────────────────────────────────
             if (availableSizes.isEmpty()) {
                 dto.setInStock(false);
-                log.info("  ⏭️  No available sizes — skipping: {}", dto.getName());
+                log.info("  ⏭️  No available sizes — skipping: {}, url: {}", dto.getName(), dto.getProductUrl());
                 return;
             }
 
@@ -232,9 +230,9 @@ public class BikeXpertScraperService {
 // PRIVATE HELPERS
 // ─────────────────────────────────────────────────────────────
 
-    private int findTotalPages() {
+    private int findTotalPages(String listingUrl) {
         try {
-            Document doc = connect(LISTING_URL);
+            Document doc = connect(listingUrl);
             return doc.select("a[href*=pag-]")
                     .stream()
                     .map(el -> el.attr("href"))
@@ -250,6 +248,7 @@ public class BikeXpertScraperService {
     }
 
     private ScrapedProductDto parseProductCard(Element product) {
+
         Element nameEl = product.selectFirst("a[title]");
         Element priceEl = product.selectFirst(".price.t-call-to-action-background-to-text");
         // fallback if class combo differs

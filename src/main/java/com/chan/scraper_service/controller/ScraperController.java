@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -19,5 +21,13 @@ public class ScraperController{
     public ResponseEntity<String> runScrape() {
         orchestrator.runFullScrape();
         return ResponseEntity.ok("Scrape started");
+    }
+
+    // ── MagazinulDeBiciclete only ─────────────────────────────────
+    @PostMapping("/run/magazinul")
+    public ResponseEntity<String> runMagazinul() {
+        log.info("▶️ Manual trigger: MagazinulDeBiciclete at {}", Instant.now());
+        orchestrator.runMagazinul();
+        return ResponseEntity.ok("MagazinulDeBiciclete scrape completed");
     }
 }
